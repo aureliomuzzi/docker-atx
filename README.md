@@ -21,7 +21,7 @@ A imagem do php7 inclui:
 
 1. Clone o projeto
 ````sh
-git clone https://github.com/aureliomuzzi/docker.git
+git clone https://github.com/aureliomuzzi/docker-atx.git
 ````
 2. Entre na pasta do projeto
 ````sh
