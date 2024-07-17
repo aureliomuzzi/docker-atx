@@ -1,23 +1,4 @@
-version: '2'
-
 services:
-  php7:
-    build:
-      context: ./php7
-      args:
-        - USER_UID=${USER_UID}
-        - USER_GID=${USER_GID}
-    container_name: php7
-    restart: always
-    volumes:
-      - ../:/var/www/
-      - "/etc/timezone:/etc/timezone:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
-      - ./openssl.cnf:/etc/ssl/openssl.cnf
-    networks:
-      - docker-net
-    tty: true
 
   nginx:
     build: ./nginx
@@ -35,12 +16,99 @@ services:
     networks:
       - docker-net
     depends_on:
-      - php8
+      - php56
+      - php72
+      - php74
+      - php83
+
+  php56:
+    build:
+      context: ./php5.6
+      args:
+        - USER_UID=${USER_UID}
+        - USER_GID=${USER_GID}
+    container_name: php_5.6
+    restart: always
+    volumes:
+      - ../:/var/www/
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
+      - ./openssl.cnf:/etc/ssl/openssl.cnf
+    networks:
+      - docker-net
+    tty: true
+    depends_on:
+      - mysql
+      - redis
+
+  php72:
+    build:
+      context: ./php7.2
+      args:
+        - USER_UID=${USER_UID}
+        - USER_GID=${USER_GID}
+    container_name: php_7.2
+    restart: always
+    volumes:
+      - ../:/var/www/
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
+      - ./openssl.cnf:/etc/ssl/openssl.cnf
+    networks:
+      - docker-net
+    tty: true
+    depends_on:
+      - mysql
+      - redis
+
+  php74:
+    build:
+      context: ./php7.4
+      args:
+        - USER_UID=${USER_UID}
+        - USER_GID=${USER_GID}
+    container_name: php_7.4
+    restart: always
+    volumes:
+      - ../:/var/www/
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
+      - ./openssl.cnf:/etc/ssl/openssl.cnf
+    networks:
+      - docker-net
+    tty: true
+    depends_on:
+      - mysql
+      - redis
+
+  php83:
+    build:
+      context: ./php8.3
+      args:
+        - USER_UID=${USER_UID}
+        - USER_GID=${USER_GID}
+    container_name: php_8.3
+    restart: always
+    volumes:
+      - ../:/var/www/
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
+      - ./openssl.cnf:/etc/ssl/openssl.cnf
+    networks:
+      - docker-net
+    tty: true
+    depends_on:
+      - mysql
+      - redis
 
   mysql:
     image: mysql:5.7
     command: mysqld --sql_mode=""
-    container_name: mysql
+    container_name: mysql_5.7
     restart: always
     tty: true
     environment:
@@ -57,38 +125,32 @@ services:
     networks:
       - docker-net
 
-  php8:
-    build:
-      context: ./php8
-      args:
-        - USER_UID=${USER_UID}
-        - USER_GID=${USER_GID}
-    container_name: php8
+  postgres:
+    build: ./postgres
+    container_name: postgres
     restart: always
+    tty: true
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - ../:/var/www/
+      - ${DATA_LIB}/data/postgres:/var/lib/postgresql/data
+      - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
-      - ./openssl.cnf:/etc/ssl/openssl.cnf
-    networks:
-      - docker-net
-    tty: true
-      
-  caddy:
-    build: ./caddy
-    container_name: caddy
-    volumes:
-      - ../:/var/www
-      - ./caddy/caddy:/etc/caddy
-      - .logs/caddy:/var/log/caddy
     ports:
-      - "8181:8181"
-      - "443:443"
+      - 5432:5432
     networks:
       - docker-net
+
+  redis :
+    image: redislabs/rejson:latest
+    container_name: redis
     restart: always
-    tty: true  
+    expose:
+      - 6379
+    networks:
+      - docker-net
 
 networks: 
   docker-net:
