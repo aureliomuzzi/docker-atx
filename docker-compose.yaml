@@ -39,7 +39,7 @@ services:
       - docker-net
     tty: true
     depends_on:
-      - mysql
+      - mariadb
       - redis
 
   php72:
@@ -60,7 +60,7 @@ services:
       - docker-net
     tty: true
     depends_on:
-      - mysql
+      - mariadb
       - redis
 
   php74:
@@ -81,7 +81,7 @@ services:
       - docker-net
     tty: true
     depends_on:
-      - mysql
+      - mariadb
       - redis
 
   php83:
@@ -102,13 +102,12 @@ services:
       - docker-net
     tty: true
     depends_on:
-      - mysql
+      - mariadb
       - redis
 
-  mysql:
-    image: mysql:5.7
-    command: mysqld --sql_mode=""
-    container_name: mysql_5.7
+  mariadb:
+    image: mariadb:10.6
+    container_name: mariadb
     restart: always
     tty: true
     environment:
@@ -116,15 +115,26 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
-      - ${DATA_LIB}/data/mysql:/var/lib/mysql
-      - ./mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - ${DATA_LIB}/data/mariadb:/var/lib/mariadb
+      - ./mariadb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
     ports:
-      - 3306:3306
+      - 3308:3308
     networks:
       - docker-net
 
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+    networks:
+      - docker-net
+  
   postgres:
     build: ./postgres
     container_name: postgres
