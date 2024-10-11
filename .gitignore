@@ -5,3 +5,5 @@ nginx/sites/*
 !nginx/sites/localhost.conf
 postgres/docker-entrypoint-initdb.d/
 mysql/docker-entrypoint-initdb.d/
+db/init/*
+docker-binaries/*

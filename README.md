@@ -60,6 +60,9 @@ docker-compose exec --user=dockuser php7 bash
 winpty docker-compose exec --user=dockuser php7 bash
 ````
 
+## Criar Volumes
+Precisa criar a pasta na raiz do projeto /db (para fazer restore de banco de dados via terminal) e /docker-binaries (para utilizar o wkhtmltopdf, instalado nesse diretorio)
+
 ## Criando projetos Laravel
 Para criar projetos Laravel para o PHP7+ você deve entrar na pasta do nginx, entrar na pasta sites e criar um novo arquivo .conf para o seu projeto. Após isso editar as configurações. Siga os passos abaixo
 

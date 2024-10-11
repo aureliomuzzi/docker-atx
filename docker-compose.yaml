@@ -16,52 +16,8 @@ services:
     networks:
       - docker-net
     depends_on:
-      - php56
-      - php72
       - php74
       - php83
-
-  php56:
-    build:
-      context: ./php5.6
-      args:
-        - USER_UID=${USER_UID}
-        - USER_GID=${USER_GID}
-    container_name: php_5.6
-    restart: always
-    volumes:
-      - ../:/var/www/
-      - "/etc/timezone:/etc/timezone:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
-      - ./openssl.cnf:/etc/ssl/openssl.cnf
-    networks:
-      - docker-net
-    tty: true
-    depends_on:
-      - mariadb
-      - redis
-
-  php72:
-    build:
-      context: ./php7.2
-      args:
-        - USER_UID=${USER_UID}
-        - USER_GID=${USER_GID}
-    container_name: php_7.2
-    restart: always
-    volumes:
-      - ../:/var/www/
-      - "/etc/timezone:/etc/timezone:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
-      - ./openssl.cnf:/etc/ssl/openssl.cnf
-    networks:
-      - docker-net
-    tty: true
-    depends_on:
-      - mariadb
-      - redis
 
   php74:
     build:
@@ -77,6 +33,7 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
       - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
       - ./openssl.cnf:/etc/ssl/openssl.cnf
+      - ./custom.ini:/usr/local/etc/php/conf.d/custom.ini
     networks:
       - docker-net
     tty: true
@@ -98,6 +55,7 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
       - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
       - ./openssl.cnf:/etc/ssl/openssl.cnf
+      - ./custom.ini:/usr/local/etc/php/conf.d/custom.ini
     networks:
       - docker-net
     tty: true
@@ -106,32 +64,39 @@ services:
       - redis
 
   mariadb:
-    image: mariadb:10.6
-    container_name: mariadb
-    restart: always
-    tty: true
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-    volumes:
-      - ${DATA_LIB}/data/mariadb:/var/lib/mariadb
-      - ./mariadb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-      - "/etc/timezone:/etc/timezone:ro"
-      - "/etc/localtime:/etc/localtime:ro"
+    image: mariadb:10.2.44
     ports:
-      - 3308:3308
+      - 3306:3306
+    environment:
+      MARIADB_DATABASE: "atxsales_local"
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+    command: --sql-mode="NO_ENGINE_SUBSTITUTION"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d
+      - atxsales_mariadb:/var/lib/mysql
     networks:
       - docker-net
 
   phpmyadmin:
-    image: phpmyadmin
-    container_name: phpmyadmin
-    restart: always
+    image: phpmyadmin/phpmyadmin:latest
     ports:
-      - 8080:80
+      - 8001:80
+    depends_on:
+      mariadb:
+        condition: service_healthy
     environment:
-      - PMA_ARBITRARY=1
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+      PMA_USER: "root"
+      PMA_PASSWORD: ""
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+    volumes:
+      - ./phpmyadmin/sessions:/var/lib/php/sessions
     networks:
       - docker-net
   
@@ -165,4 +130,7 @@ services:
 networks: 
   docker-net:
     driver: bridge
+
+volumes:
+  atxsales_mariadb:
 
