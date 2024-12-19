@@ -1,59 +1,73 @@
+# Base image
 FROM php:8.3-fpm
 
+# Arguments for user and group ID
 ARG USER_UID
 ARG USER_GID
 
 # Criação do usuário
 RUN groupadd -g ${USER_GID} dockuser && \
-useradd -u ${USER_UID} -g dockuser -m dockuser && \
-usermod -p "*" dockuser
+    useradd -u ${USER_UID} -g dockuser -m dockuser && \
+    usermod -p "*" dockuser
 
+# Atualização de bibliotecas compartilhadas
 RUN ldconfig
 
-# Instalação de pacotes necessários
-RUN apt update && apt install -y openssl bash libxml2-dev postgresql-client libpq-dev libpng-dev libjpeg-dev libaio1 chromium
+# Instalação de pacotes básicos e ferramentas
+RUN apt update && apt install -y \
+    openssl \
+    bash \
+    libxml2-dev \
+    postgresql-client \
+    libpq-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libaio1 \
+    chromium \
+    git \
+    libxrender-dev \
+    libfontconfig \
+    nano \
+    cron \
+    zip \
+    zlib1g-dev \
+    libzip-dev \
+    libffi-dev && \
+    apt-get clean
 
-# Instalação das extensões PHP
-RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql soap gd
+# Instalação do Node.js
+RUN curl -sL https://deb.nodesource.com/setup_21.x | bash && \
+    apt-get update && apt-get install -y nodejs && \
+    apt-get clean
 
-RUN docker-php-ext-install exif
-
-RUN docker-php-ext-install calendar && docker-php-ext-configure calendar
-
-RUN curl -sL https://deb.nodesource.com/setup_21.x | bash
-RUN apt-get update && apt-get install -y nodejs && apt-get clean
-
+# Instalação do Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN rm -rf /var/www/html
+# Instalação de extensões PHP
+RUN docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    pdo_pgsql \
+    soap \
+    gd \
+    exif \
+    calendar \
+    bcmath \
+    intl \
+    zip \
+    ffi
 
-RUN apt-get update && apt-get install -y git
+# Configuração do GD com suporte a JPEG
+RUN docker-php-ext-configure gd --with-jpeg && docker-php-ext-install gd
 
-RUN apt-get update && apt-get install -y libxrender-dev libfontconfig
-
-RUN apt-get update && apt-get install -y nano cron
-
-RUN docker-php-ext-install bcmath
-RUN docker-php-ext-install intl
-
-# Configuração e instalação de GD com suporte a JPEG
-RUN docker-php-ext-configure gd --with-jpeg \
-    && docker-php-ext-install gd
-
-# Instalação da extensão zip
-RUN apt install -y zip
-RUN apt-get update && apt-get install -y \
-    zlib1g-dev \
-    libzip-dev
-RUN docker-php-ext-install zip
-
-# Adicionando a extensão FFI
-RUN apt-get update && apt-get install -y libffi-dev \
-    && docker-php-ext-install ffi
-
-# Habilitando FFI no php.ini
+# Habilitação de FFI no PHP
 RUN echo "ffi.enable=true" >> /usr/local/etc/php/conf.d/ffi.ini
 
+# Remoção do diretório padrão
+RUN rm -rf /var/www/html
+
+# Definição do diretório de trabalho
 WORKDIR /var/www
 
+# Cópia de arquivos de configuração
 COPY ./.bash_aliases /home/dockuser

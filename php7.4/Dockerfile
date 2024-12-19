@@ -26,7 +26,7 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash
 
 RUN apt-get update && apt-get install -y nodejs && apt-get clean
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=1.9.2
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 RUN rm -rf /var/www/html
 
@@ -39,6 +39,14 @@ RUN apt-get update && apt-get install -y nano cron
 RUN docker-php-ext-install bcmath
 
 RUN docker-php-ext-install intl
+
+RUN docker-php-ext-install fileinfo
+
+RUN docker-php-ext-install gettext
+
+RUN docker-php-ext-install sockets
+
+RUN docker-php-ext-install xmlrpc
 
 # Instalação da extensão mysqli
 RUN docker-php-ext-install mysqli
